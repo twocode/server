@@ -1,0 +1,65 @@
+create table ten(a int);
+insert into ten values (0),(1),(2),(3),(4),(5),(6),(7),(8),(9);
+create table one_k(a int);
+insert into one_k select A.a + B.a* 10 + C.a * 100 from ten A, ten B, ten C;
+create table one_m(a int);
+insert into one_m select A.a + B.a* 1000  from one_k A, one_k B;
+delete from one_m where a=0 limit 1;
+create table t1 (
+id int(10) unsigned NOT NULL AUTO_INCREMENT,
+filler varchar(100),
+subset_id int(11) DEFAULT NULL,
+PRIMARY KEY (id),
+KEY t1_subset_id (subset_id)
+);
+create table t1_subsets (
+id int(10) unsigned NOT NULL AUTO_INCREMENT,
+filler1 varchar(100),
+filler2 varchar(100),
+filler3 varchar(100),
+PRIMARY KEY (id)
+);
+insert into t1 select a,a, NULL from one_m where a < 50*1000;
+insert into t1_subsets select a,a,a,a from one_m where a < 500*1000 limit 499000;
+analyze format=json
+SELECT * FROM   t1 WHERE t1.subset_id IN (SELECT t1_subsets.id FROM t1_subsets);
+ANALYZE
+{
+  "query_block": {
+    "select_id": 1,
+    "r_loops": 1,
+    "r_total_time_ms": 0.0444,
+    "table": {
+      "table_name": "t1",
+      "access_type": "range",
+      "possible_keys": ["t1_subset_id"],
+      "key": "t1_subset_id",
+      "key_length": "5",
+      "used_key_parts": ["subset_id"],
+      "r_loops": 1,
+      "rows": 3,
+      "r_rows": 0,
+      "r_total_time_ms": 0.0146,
+      "filtered": 100,
+      "r_filtered": 100,
+      "index_condition": "t1.subset_id is not null"
+    },
+    "table": {
+      "table_name": "t1_subsets",
+      "access_type": "eq_ref",
+      "possible_keys": ["PRIMARY"],
+      "key": "PRIMARY",
+      "key_length": "4",
+      "used_key_parts": ["id"],
+      "ref": ["test.t1.subset_id"],
+      "r_loops": 0,
+      "rows": 1,
+      "r_rows": null,
+      "filtered": 100,
+      "r_filtered": null,
+      "attached_condition": "t1.subset_id = t1_subsets.`id`",
+      "using_index": true
+    }
+  }
+}
+drop table t1,t1_subsets,ten,one_k,one_m;
