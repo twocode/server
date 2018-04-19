@@ -4874,11 +4874,7 @@ make_join_statistics(JOIN *join, List<TABLE_LIST> &tables_list,
     }
 
   }
-  if (null_rejecting_conds)
-  {
-    delete null_rejecting_conds;
-    null_rejecting_conds= NULL;
-  }
+
   if (pull_out_semijoin_tables(join))
     DBUG_RETURN(TRUE);
 

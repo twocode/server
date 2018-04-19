@@ -14713,11 +14713,24 @@ Item* make_null_rejecting_conds(THD *thd, TABLE *table,
   KEY *keyinfo;
   Item *cond= NULL;
   KEYUSE* keyuse;
+  
+  /*
+    The null rejecting conds added will be on the keypart of a key, so for
+    that we need the table to atleast have a key.
+  */
+  if (!table->s->keys)
+    return NULL;
+
   for(uint i=0; i < keyuse_array->elements; i++)
   {
-    KEYUSE* keyuse= (KEYUSE*)dynamic_array_ptr(keyuse_array, i);
+    keyuse= (KEYUSE*)dynamic_array_ptr(keyuse_array, i);
     if (keyuse->table == table)
     {
+      /*
+        No null rejecting conds for a hash key
+      */
+      if (keyuse->key == MAX_KEY)
+        continue;
       keyinfo= keyuse->table->key_info+keyuse->key;
       Field *field= keyinfo->key_part[keyuse->keypart].field;
 
