@@ -4242,7 +4242,6 @@ make_join_statistics(JOIN *join, List<TABLE_LIST> &tables_list,
   SARGABLE_PARAM *sargables= 0;
   List_iterator<TABLE_LIST> ti(tables_list);
   TABLE_LIST *tables;
-  Item* null_rejecting_conds= NULL;
   DBUG_ENTER("make_join_statistics");
 
   table_count=join->table_count;
@@ -4785,8 +4784,8 @@ make_join_statistics(JOIN *join, List<TABLE_LIST> &tables_list,
 
     s->table->cond_selectivity= 1.0;
 
-    null_rejecting_conds= make_null_rejecting_conds(join->thd, s->table,
-                                           keyuse_array, &s->const_keys);
+    make_null_rejecting_conds(join->thd, s->table,
+                              keyuse_array, &s->const_keys);
     
     /*
       Perform range analysis if there are keys it could use (1). 
@@ -4817,7 +4816,6 @@ make_join_statistics(JOIN *join, List<TABLE_LIST> &tables_list,
         if (!select)
           goto error;
 
-        select->null_rejecting_conds= null_rejecting_conds;
         records= get_quick_record_count(join->thd, select, s->table,
 				        &s->const_keys, join->row_limit);
         /* Range analyzer could modify the condition. */
@@ -4830,7 +4828,6 @@ make_join_statistics(JOIN *join, List<TABLE_LIST> &tables_list,
         s->needed_reg=select->needed_reg;
         select->quick=0;
         impossible_range= records == 0 && s->table->reginfo.impossible_range;
-        select->null_rejecting_conds= NULL;
       }
       if (!impossible_range)
       {
@@ -18535,7 +18532,7 @@ free_tmp_table(THD *thd, TABLE *entry)
     DBUG_ASSERT(entry->pos_in_table_list->table == entry);
     entry->pos_in_table_list->table= NULL;
   }
-
+  entry->null_rejecting_conds= NULL;
   free_root(&own_root, MYF(0)); /* the table is allocated in its own root */
   thd_proc_info(thd, save_proc_info);
 

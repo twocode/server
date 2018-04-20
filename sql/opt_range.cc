@@ -1184,7 +1184,6 @@ SQL_SELECT *make_select(TABLE *head, table_map const_tables,
   select->const_tables=const_tables;
   select->head=head;
   select->cond= conds;
-  select->null_rejecting_conds= NULL;
 
   if (filesort && my_b_inited(&filesort->io_cache))
   {
@@ -2400,6 +2399,7 @@ int SQL_SELECT::test_quick_select(THD *thd, key_map keys_to_use,
 {
   uint idx;
   double scan_time;
+  Item *null_rejecting_conds= NULL;
   DBUG_ENTER("SQL_SELECT::test_quick_select");
   DBUG_PRINT("enter",("keys_to_use: %lu  prev_tables: %lu  const_tables: %lu",
 		      (ulong) keys_to_use.to_ulonglong(), (ulong) prev_tables,
@@ -2423,6 +2423,7 @@ int SQL_SELECT::test_quick_select(THD *thd, key_map keys_to_use,
     read_time= (double) records + scan_time + 1; // Force to use index
   
   possible_keys.clear_all();
+  null_rejecting_conds= head->null_rejecting_conds;
 
   DBUG_PRINT("info",("Time to scan table: %g", read_time));
 
@@ -14707,7 +14708,7 @@ inline void add_cond(THD *thd, Item **e1, Item *e2)
     NULL - No null rejecting conditions for the given table
 */
 
-Item* make_null_rejecting_conds(THD *thd, TABLE *table,
+void make_null_rejecting_conds(THD *thd, TABLE *table,
                         DYNAMIC_ARRAY *keyuse_array, key_map *const_keys)
 {
   KEY *keyinfo;
@@ -14719,7 +14720,9 @@ Item* make_null_rejecting_conds(THD *thd, TABLE *table,
     that we need the table to atleast have a key.
   */
   if (!table->s->keys)
-    return NULL;
+    return ;
+  if (table->null_rejecting_conds)
+    return;
 
   for(uint i=0; i < keyuse_array->elements; i++)
   {
@@ -14762,7 +14765,8 @@ Item* make_null_rejecting_conds(THD *thd, TABLE *table,
       add_cond(thd, &cond, not_null_item);
     }
   }
-  return cond;
+  table->null_rejecting_conds= cond;
+  return;
 }
 
 
