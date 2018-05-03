@@ -5650,7 +5650,9 @@ inline bool handler::check_table_binlog_row_based(bool binlog_row)
 {
   if (unlikely((table->in_use->variables.sql_log_bin_off)))
     return 0;                            /* Called by partitioning engine */
-  if (unlikely((!check_table_binlog_row_based_done)))
+  /* Dont use cached result when current binlog format is stmt */
+  if (unlikely(!table->in_use->is_current_stmt_binlog_format_row() ||
+               (!check_table_binlog_row_based_done)))
   {
     check_table_binlog_row_based_done= 1;
     check_table_binlog_row_based_result=
