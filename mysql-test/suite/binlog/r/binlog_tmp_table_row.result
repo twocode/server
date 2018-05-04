@@ -1,0 +1,22 @@
+RESET MASTER;
+create temporary table t1(a int, b int);
+#Analyze test
+analyze table t1;
+Table	Op	Msg_type	Msg_text
+test.t1	analyze	status	Table is already up to date
+#Optimize test
+optimize table t1;
+Table	Op	Msg_type	Msg_text
+test.t1	optimize	status	Table is already up to date
+#Repair test
+repair table t1;
+Table	Op	Msg_type	Msg_text
+test.t1	repair	status	OK
+#Check test
+check table t1;
+Table	Op	Msg_type	Msg_text
+test.t1	check	status	OK
+#Checksum test
+checksum table t1;
+Table	Checksum
+test.t1	0
