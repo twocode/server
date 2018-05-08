@@ -196,7 +196,7 @@ public:
     const_item_cache= 0;
     forced_const= TRUE; 
   }
-  virtual void fix_length_and_dec();
+  virtual bool fix_length_and_dec();
   table_map used_tables() const;
   table_map not_null_tables() const { return 0; }
   bool const_item() const;
@@ -306,7 +306,7 @@ public:
   enum Item_result result_type() const;
   enum Item_result cmp_type() const;
   enum_field_types field_type() const;
-  void fix_length_and_dec();
+  bool fix_length_and_dec();
 
   uint cols();
   Item* element_index(uint i) { return reinterpret_cast<Item*>(row[i]); }
@@ -403,7 +403,7 @@ public:
   my_decimal *val_decimal(my_decimal *);
   bool val_bool();
   bool fix_fields(THD *thd, Item **ref);
-  void fix_length_and_dec();
+  bool fix_length_and_dec();
   void print(String *str, enum_query_type query_type);
   bool select_transformer(JOIN *join);
   void top_level_item() { abort_on_null=1; }
@@ -626,7 +626,7 @@ public:
   void print(String *str, enum_query_type query_type);
   enum precedence precedence() const { return CMP_PRECEDENCE; }
   bool fix_fields(THD *thd, Item **ref);
-  void fix_length_and_dec();
+  bool fix_length_and_dec();
   void fix_after_pullout(st_select_lex *new_parent, Item **ref, bool merge);
   bool const_item() const
   {

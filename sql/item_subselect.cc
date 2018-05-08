@@ -307,7 +307,8 @@ bool Item_subselect::fix_fields(THD *thd_param, Item **ref)
 
       goto end;
     }
-    fix_length_and_dec();
+    if (fix_length_and_dec())
+      goto end;
   }
   else
     goto end;
@@ -904,9 +905,10 @@ Item::Type Item_subselect::type() const
 }
 
 
-void Item_subselect::fix_length_and_dec()
+bool Item_subselect::fix_length_and_dec()
 {
   engine->fix_length_and_dec(0);
+  return FALSE;
 }
 
 
@@ -1194,7 +1196,7 @@ enum_field_types Item_singlerow_subselect::field_type() const
   return engine->field_type();
 }
 
-void Item_singlerow_subselect::fix_length_and_dec()
+bool Item_singlerow_subselect::fix_length_and_dec()
 {
   if ((max_columns= engine->cols()) == 1)
   {
@@ -1204,7 +1206,7 @@ void Item_singlerow_subselect::fix_length_and_dec()
   {
     if (!(row= (Item_cache**) current_thd->alloc(sizeof(Item_cache*) *
                                                  max_columns)))
-      return;
+      return TRUE;
     engine->fix_length_and_dec(row);
     value= *row;
   }
@@ -1221,6 +1223,7 @@ void Item_singlerow_subselect::fix_length_and_dec()
     for (uint i= 0; i < max_columns; i++)
       row[i]->maybe_null= TRUE;
   }
+  return FALSE;
 }
 
 
@@ -1505,7 +1508,7 @@ void Item_exists_subselect::init_length_and_dec()
 }
 
 
-void Item_exists_subselect::fix_length_and_dec()
+bool Item_exists_subselect::fix_length_and_dec()
 {
   DBUG_ENTER("Item_exists_subselect::fix_length_and_dec");
   init_length_and_dec();
@@ -1516,11 +1519,11 @@ void Item_exists_subselect::fix_length_and_dec()
   thd->change_item_tree(&unit->global_parameters()->select_limit,
                         new (thd->mem_root) Item_int(thd, (int32) 1));
   DBUG_PRINT("info", ("Set limit to 1"));
-  DBUG_VOID_RETURN;
+  DBUG_RETURN(FALSE);
 }
 
 
-void Item_in_subselect::fix_length_and_dec()
+bool Item_in_subselect::fix_length_and_dec()
 {
   DBUG_ENTER("Item_in_subselect::fix_length_and_dec");
   init_length_and_dec();
@@ -1528,7 +1531,7 @@ void Item_in_subselect::fix_length_and_dec()
     Unlike Item_exists_subselect, LIMIT 1 is set later for
     Item_in_subselect, depending on the chosen strategy.
   */
-  DBUG_VOID_RETURN;
+  DBUG_RETURN(FALSE);
 }
 
 

@@ -4894,7 +4894,13 @@ int create_table_impl(THD *thd,
     file= mysql_create_frm_image(thd, orig_db, orig_table_name, create_info,
                                  alter_info, create_table_mode, key_info,
                                  key_count, frm);
-    if (!file)
+    /*
+      We have to check thd->is_error() here because it can be set by
+      Item::val* for example, and before it will be cought accidentally by
+      Item_func::fix_fields() of the next call. Now we removed the check
+      from Item_func::fix_fields()
+    */
+    if (!file || thd->is_error())
       goto err;
     if (rea_create_table(thd, frm, path, db, table_name, create_info,
                          file, frm_only))
@@ -7377,7 +7383,8 @@ static bool mysql_inplace_alter_table(THD *thd,
   */
   if (mysql_rename_table(db_type, alter_ctx->new_db, alter_ctx->tmp_name,
                          alter_ctx->db, alter_ctx->alias,
-                         FN_FROM_IS_TMP | NO_HA_TABLE))
+                         FN_FROM_IS_TMP | NO_HA_TABLE) ||
+                         thd->is_error())
   {
     // Since changes were done in-place, we can't revert them.
     (void) quick_rm_table(thd, db_type,
