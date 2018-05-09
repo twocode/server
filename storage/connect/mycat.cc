@@ -149,6 +149,9 @@ TABTYPE GetTypeID(const char *type)
 #if defined(JAVA_SUPPORT) || defined(CMGO_SUPPORT)
 		             : (!stricmp(type, "MONGO") && MongoEnabled()) ? TAB_MONGO
 #endif
+#if defined(JAVA_SUPPORT) || defined(CMGO_SUPPORT)
+		             : (!stricmp(type, "MONGO") && MongoEnabled()) ? TAB_MONGO
+#endif
 								 : (!stricmp(type, "MYSQL")) ? TAB_MYSQL
                  : (!stricmp(type, "MYPRX")) ? TAB_MYSQL
                  : (!stricmp(type, "DIR"))   ? TAB_DIR
