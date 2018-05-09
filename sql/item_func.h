@@ -1613,7 +1613,9 @@ public:
   my_decimal *val_decimal(my_decimal *dec) { return args[0]->val_decimal(dec); }
   bool get_date(MYSQL_TIME *ltime, ulonglong fuzzydate)
   {
-    return args[0]->get_date(ltime, fuzzydate);
+    bool rc= args[0]->get_date(ltime, fuzzydate);
+    null_value= rc;
+    return rc;
   }
   const char *func_name() const { return "rollup_const"; }
   bool const_item() const { return 0; }
